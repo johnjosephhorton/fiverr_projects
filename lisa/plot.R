@@ -8,7 +8,22 @@ library(ggrepel)
 })
 
 df <- read.csv("proportions.csv") %>%
-    pivot_longer(-c(word,position))
+    pivot_longer(-c(word,position)) %>%
+    arrange(word, position, name) %>% 
+    group_by(word, position) %>%
+    mutate(label.height = sum(value) - cumsum(value) + value/2)
+
+g <- ggplot(data = df, aes(x = position, y = value, fill = factor(name), group = factor(name))) +
+    geom_bar(stat = "identity")  +
+    facet_wrap(~word, ncol = 2)  +
+    geom_text(aes(y = label.height, label = value)) +
+    scale_y_continuous(label = scales::percent) +
+    ylab("% of observations")
+
+pdf("v0.pdf", width = 6, height = 6)
+print(g)
+dev.off()
+
 
 g <- ggplot(data = df, aes(x = position, y = value, colour = factor(name), group = factor(name))) +
     geom_line() +
